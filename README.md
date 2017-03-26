@@ -6,7 +6,11 @@ Tools to write a personal diary with peace of mind.
 
 Dependencies:
 
-	- OpenSSL (in path)
-	- Git
+- OpenSSL (in path)
+- Git
+
+Usage:
+
+	> py diary.py -h
 
 Don't copy.
