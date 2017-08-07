@@ -1,0 +1,10 @@
+
+enc
+	openssl enc -e -aes-256-cbc -salt -a -in fPath -out fPath.enc
+
+dec
+	openssl enc -d -aes-256-cbc -salt -a -in fPath.enc
+
+
+use os.remove and os.startfile to avoid shell injection vulnerablilities from subprocess.run(..., shell=True)
+
