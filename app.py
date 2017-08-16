@@ -1,7 +1,12 @@
-import json
+import os
 import argparse
 
-ensure that openssl and git are accessible (set env if necessary) to subprocess.run without shell=True
+import utils
+
+# ensure that openssl and git are accessible (set env if necessary) to 
+# subprocess.run without shell=True
+os.environ["git"]
+os.environ["openssl"]
 
 def main():
 	return

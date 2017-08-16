@@ -1,15 +1,16 @@
 import os
 import sys
 import shlex
-import random
 import shutil
 import getpass
 import subprocess
 
-SPACE = " "
-CRYPTO_BASE = 'openssl enc -{crypto_direction} -aes-256-cbc -salt -a -in "{inFile}" -out "{outFile}"'
+import queue
+
+CRYPTO_BASE = 'openssl enc -{crypto_direction} -salt -aes-256-cbc -base64 -in "{inFile}" -out "{outFile}"'
 
 def shall_i(crypto_direction, filePath):
+	SPACE = " "
 	file_is_encrypted = True
 	with open(filePath, mode='rt') as fp:
 		for i, aLine in enumerate(fp):
@@ -31,33 +32,55 @@ def crypto(filePath, action):
 	elif action is "decrypt":
 		crypt_dirn = "d"
 	else:
-		raise ValueError('crypto() doesn\'t know how to "{}" a file'.format(action))
+		raise ValueError(f'crypto() doesn\'t know how to "{action}" a file')
 	if shall_i(action, filePath) is "no":
-		raise RuntimeError("Cannot {} already {}ed file".format(action, action))
-	tempFile = filePath + ".temp"
-	cmnd = CRYPTO_BASE.format(crypto_direction=crypt_dirn, inFile=filePath, outFile=tempFile)
+		raise RuntimeError(f"Cannot {action} already {action}ed file:\n\
+		`{filePath}`") from None
+	resultFile = filePath + ".temp"
+	cmnd = CRYPTO_BASE.format(
+		inFile=filePath,
+		outFile=resultFile,
+		crypto_direction=crypt_dirn
+	)
 	subprocess.run(shlex.split(cmnd), stdout=subprocess.DEVNULL)
-	shutil.copy2(src=tempFile, dst=filePath)
-	with...as...:
-		my_name = sys._getframe().f_code.co_name # bit.ly/2veIOw3
-		app.announce(frm=my_name, info={
-			"": ""
-		})
-	shredFile(tempFile)
+	# if encryption is requested, then overwrite inFile
+	# NOTE: at this point, filePath still contains plain text and although
+	# copy2 will overwrite it with its encrypted version, we can't risk the
+	# scenario where HDD forensics experts are able to retrive previously
+	# written data (which was in plain text) due to insufficient overwrites
+	# so we write garbage 35 times berfor copying the aes-encrypted-plain-text
+	# from resultFile to inFile (i.e. filePath)
+	if action is "encrypt":
+		overwrite(filePath)
+	shutil.copy2(src=resultFile, dst=filePath)
+	# SIDE_EFFECT: for git and local_db to do its job
+	queue.push("crypto", {"action": action, "subject": filePath})
+	# sugar
+	if action is "encrypt":
+		print(f"Entry for {path2date(filePath)} encrypted successfully")
+	else:
+		overwrite(resultFile)
+		# because in case of decrypt-a-file, resultFile would contian plain
+		# text and the fact that resultFile is stored somewhere else on disk,
+		# we cannot risk simply deleteing resultFile without first garbling it
+		os.start(filePath)
+	os.remove(resultFile)
 	return "success"
 
-def date2path():
+def date2path(date, month_num, full_year):
 	return path
 
 def path2date():
 	return date
 
-def shredFile(filePath):
-	rand_init = os.urandom(512)
-	random.seed(rand_init)
-	file_size = os.stat(filePath).st_size / 1024 / 1024
+def overwrite(filePath, passes=35):
+	""" write random data of size slightly larger than initial size of
+	`filePath` in file pointed by `filePath`, `passes` number of times
+	"""
+	file_size = os.stat(filePath).st_size / 1024
 	file_size = math.ceil(file_size)
-	fp = open(filePath, mode='')
-	with fp:
-	return "success"
-
+	target_size = file_size * 1024
+	with open(filePath, mode='rb') as fp:
+		for _ in range(passes):
+			fp.write(os.urandom(target_size))
+	return
