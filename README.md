@@ -1,3 +1,10 @@
+Development has shifted to other, more abstract, project, see-- https://github.com/s-c-p/secure-notes
+
+
+______________________________
+
+
+
 # Command Line Diary-App
 
 Tools to write a personal diary with peace of mind.
